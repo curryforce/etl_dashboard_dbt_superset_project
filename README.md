@@ -103,6 +103,10 @@ Beim ersten Login muss in Superset einmalig die Analytics-Datenbank als Datenque
    ```
 
 4. **TEST CONNECTION** → muss „Connection looks good!" zurückgeben → **CONNECT**.
+5. **Import von Dashboard** (optinal für obiges Dashboard)
+    ```
+    docker compose exec superset superset import-dashboards -f /app/dashboard_export.zip -u admin
+    ```
 
 >  **Wichtig:** Der Host heißt `postgres` (Name des Docker-Compose-Services), **nicht** `localhost` oder `0.0.0.0`. Aus Sicht des Superset-Containers verweist `localhost` auf den Superset-Container selbst, wo kein Postgres läuft – daher die Fehlermeldung „port is closed".
 >
@@ -156,6 +160,6 @@ docker compose down -v
 ├── docker-compose.yml
 ├── data/raw/           # ← Rohdaten-CSVs landen hier
 ├── loader/             # CSV → Postgres Bootstrap
-├── superset/           # Superset-Image + Bootstrap-Script
+├── superset/           # Superset-Image + Bootstrap-Script, dashboard_export.zip
 └── dbt/                # dbt-Projekt ( models/ usw. )
 ```
