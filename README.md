@@ -1,4 +1,5 @@
-# BI-Dashboard -DBT-Postgres-AparcheSuperset -Thema Mobilfunk
+# BI-Dashboard -DBT-Postgres-ApacheSuperset 
+Ein Dashboard mit KPI-Metriken über Trade-In-Optionen (Verkauf des alten Smartphones) im Rahmen eines Vertragabschlusses für ein neues Endgerät.
 Daten im Apache-Superset-Dashboard am Ende der ETL-Strecke:
 ![Dashboardbild1](media/image.png)
 ![Dashboardbild1](media/image2.png)
