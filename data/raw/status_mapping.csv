@@ -1,0 +1,29 @@
+bearbeitungsstatus,beschreibung
+draft,Kunde hat mit Trade-in interagiert (Lead unvollständig oder vollständig)
+LP_S0,Trade-in Lead erstellt
+LP_S1,Kunde an Einsendung des Handys erinnert (E-Mail geblockt)
+LP_S2,Handy erhalten
+LP_S3,Übereinstimmende Einschätzung
+LP_S4,Bereit für Ankauf
+LP_S6,Bereit für Ankauf - Eigentumsnachweis fehlt
+LP_S9,Prozess storniert
+LP_S10,Prozess erfolgreich abgeschlossen
+LP_S11,Prozess erfolgreich abgeschlossen und Provision ausgezahlt
+LP_S12,"Order booked incorrectly, no further processing necessary"
+LP_S14,Handy wird an Kunden zurückgeschickt - Zahlungs- oder Adressdaten fehlen
+LP_S15,Handy wird an Kunden zurückgeschickt
+LP_S16,Kunde hat Paket mit Handy zurückerhalten
+LP_S20,Abweichende Einschätzung
+LP_S21,Abweichende Einschätzung - Warten auf Kundenantwort
+LP_S22,Abweichende Einschätzung - Neues Angebot abgelehnt
+LP_S23,Abweichende Einschätzung - keine Kundenantwort und automatischer Ankauf
+LP_S24,Abweichende Einschätzung - Neues Angebot angenommen
+LP_S25,Abweichende Einschätzung - In Verhandlung mit Kunden
+LP_S26,Abweichende Einschätzung - interne Prüfung
+LP_S27,Abweichende Einschätzung - In Verhandlung mit Kunden
+LP_S42,Handy ohne vorliegende Registrierung erhalten
+LP_S43,Handy ohne vorliegende Registrierung erhalten - Kunden kontaktiert
+LP_S44,Handy ohne vorliegende Registrierung erhalten - Zustandsprüfung
+LP_S45,Handy ohne vorliegende Registrierung erhalten - Übereinstimmende Einschätzung
+LP_S47,Handy ohne vorliegende Registrierung erhalten - Handy wird an Kunden zurückgeschickt
+LP_S81,Abweichende Einschätzung - Neue Zustandsprüfung aufgrund von Kundenbeschwerde

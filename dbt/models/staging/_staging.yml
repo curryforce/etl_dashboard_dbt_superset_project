@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  - name: stg_trade_in_orders
+    description: "Staging-Modell für Trade-In Bestellungen"
+    columns:
+      - name: id
+        description: "Primärschlüssel der Bestellung"
+        data_tests:
+          - not_null
+          - unique
+
+      - name: auftragsdatum
+        description: "Datum des Auftragseingangs"
+        data_tests:
+          - not_null
+
+      - name: bearbeitungsstatus
+        description: "Aktueller Status der Bearbeitung"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['LP_S0', 'LP_S1', 'LP_S10', 'LP_S11', 'LP_S16', 'LP_S20', 'LP_S21', 'LP_S27', 'LP_S9', 'LP_S92', 'draft','unbekannt']
+
+      - name: zustand
+        description: "Optischer/Technischer Zustand des Geräts"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values: ['Beschädigt oder defekt', 'Gebraucht', 'Gut', 'Neu', 'Sehr gut', 'Wie neu','unbekannt']
+
+  - name: stg_status_mapping
+    description: "Staging-Modell für die Zuordnung der Status-Codes"
+    columns:
+      - name: bearbeitungsstatus
+        description: "Der Status-Code als Primärschlüssel"
+        data_tests:
+          - not_null
+          - unique
+
+      - name: beschreibung
+        description: "Klartext-Beschreibung des Status"
+        data_tests:
+          - not_null

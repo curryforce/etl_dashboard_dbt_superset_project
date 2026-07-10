@@ -1,0 +1,6 @@
+dbt/target/partial_parse.msgpack
+dbt/target
+.DS_Store
+.env
+dbt/logs
+dbt/packages

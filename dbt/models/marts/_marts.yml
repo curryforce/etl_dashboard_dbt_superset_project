@@ -1,0 +1,190 @@
+version: 2
+
+models:
+  - name: fct_trade_in_orders
+    description: >
+      Gold-Layer / Fakten-Tabelle: eine Zeile pro Trade-In-Auftrag, angereichert
+      um Klartext-Status, Funnel-Gruppierung und bereinigte Euro-Beträge.
+      Dies ist die Tabelle, die als Superset-Dataset für das Dashboard dient
+      (KPIs, Zeitreihen, Vergleiche, Verteilungen).
+    columns:
+      - name: lead_id
+        description: "Lead-id wird für potentiellen Kunden vergeben"
+      - name: order_id
+        description: "Primärschlüssel der Bestellung"
+        data_tests:
+          - not_null
+          - unique
+
+      - name: auftragsdatum
+        description: "Zeitstempel des Auftragseingangs"
+        data_tests:
+          - not_null
+
+      - name: bearbeitungsstatus
+        description: "Granularer Status-Code aus dem Quellsystem"
+        data_tests:
+          - not_null
+
+      - name: status_beschreibung
+        description: "Menschenlesbare Statusbeschreibung (mit Fallback für unbekannte Codes)"
+        data_tests:
+          - not_null
+
+      - name: status_gruppe
+        description: "Business-Klassifizierung des Status in Funnel-Stufen für Dashboards"
+        data_tests:
+          - not_null
+          - accepted_values:
+              values:
+                - 'Draft'
+                - 'Angelegt'
+                - 'In Pruefung'
+                - 'Abweichende Einschaetzung'
+                - 'Abgeschlossen'
+                - 'Storniert'
+                - 'Rueckgabe'
+                - 'Fehlerhaft'
+                - 'Unbekannt'
+
+      - name: zustand
+        description: "Optischer/technischer Zustand des Altgeräts"
+        data_tests:
+          - not_null
+
+      - name: ankaufswert_euro
+        description: >
+          Angebotener Ankaufswert in Euro. NULL, wenn (noch) kein Angebot
+          vorliegt (z.B. unvollständige Drafts) - siehe hat_angebotswert.
+
+      - name: tatsaechlicher_ankaufswert_euro
+        description: >
+          Tatsächlich ausgezahlter Ankaufswert in Euro. NULL, wenn noch keine
+          Auszahlung erfolgt ist - siehe hat_tatsaechlichen_wert.
+
+      - name: hat_angebotswert
+        description: "TRUE, wenn ein Ankaufsangebot vorliegt"
+
+      - name: hat_tatsaechlichen_wert
+        description: "TRUE, wenn ein tatsächlicher Auszahlungsbetrag vorliegt"
+
+  - name: mart_kpi_overall
+    description: >
+      Single-Row-KPI-Tabelle über den gesamten Auftragsbestand. Konversions-
+      und Stornoquote sowie die Euro-Kennzahlen werden hier EINMAL in dbt
+      berechnet (single source of truth) und in Superset nur noch angezeigt,
+      statt die Business-Logik (was zählt als "abgeschlossen"/"storniert")
+      erneut als Custom-SQL-Metrik im BI-Tool zu duplizieren.
+    columns:
+      - name: auftraege_gesamt
+        description: "Gesamtzahl aller Trade-In-Aufträge"
+        data_tests:
+          - not_null
+      - name: auftraege_abgeschlossen
+        description: "Anzahl Aufträge mit Status LP_S10/LP_S11 (ist_abgeschlossen)"
+        data_tests:
+          - not_null
+      - name: auftraege_storniert
+        description: "Anzahl Aufträge mit Status LP_S9 (ist_storniert)"
+        data_tests:
+          - not_null
+      - name: konversionsrate
+        description: "auftraege_abgeschlossen / auftraege_gesamt, als Verhältnis 0-1"
+        data_tests:
+          - not_null
+      - name: stornoquote
+        description: "auftraege_storniert / auftraege_gesamt, als Verhältnis 0-1"
+        data_tests:
+          - not_null
+      - name: avg_angebotswert_euro
+        description: "Ø angebotener Ankaufswert in Euro (NULL-Werte aus fehlenden Angeboten werden von AVG ignoriert)"
+      - name: avg_tatsaechlicher_ankaufswert_euro
+        description: "Ø tatsächlich ausgezahlter Ankaufswert in Euro (nur Aufträge mit erfolgter Auszahlung)"
+      - name: summe_tatsaechlicher_ankaufswert_euro
+        description: "Summe aller tatsächlich ausgezahlten Ankaufswerte in Euro"
+
+  - name: mart_kpi_monatlich
+    description: >
+      Wie mart_kpi_overall, aber auf Monatsebene (ein Monat = eine Zeile).
+      Grundlage für Zeitreihen-Charts in Superset (z.B. Konversionsrate im
+      Zeitverlauf), ohne dass Superset selbst Monats-Bucketing oder
+      Ratio-Berechnungen übernehmen muss.
+    columns:
+      - name: monat
+        description: "Erster Tag des Kalendermonats (Auftragsdatum, Monatsgranularität)"
+        data_tests:
+          - not_null
+          - unique
+      - name: auftraege_gesamt
+        description: "Aufträge im jeweiligen Monat"
+        data_tests:
+          - not_null
+      - name: auftraege_abgeschlossen
+        description: "Abgeschlossene Aufträge im jeweiligen Monat"
+        data_tests:
+          - not_null
+      - name: auftraege_storniert
+        description: "Stornierte Aufträge im jeweiligen Monat"
+        data_tests:
+          - not_null
+      - name: konversionsrate
+        description: "Konversionsrate des Monats, als Verhältnis 0-1"
+      - name: stornoquote
+        description: "Stornoquote des Monats, als Verhältnis 0-1"
+      - name: avg_angebotswert_euro
+        description: "Ø angebotener Ankaufswert des Monats in Euro"
+      - name: avg_tatsaechlicher_ankaufswert_euro
+        description: "Ø tatsächlich ausgezahlter Ankaufswert des Monats in Euro"
+
+  - name: mart_kpi_nach_zustand
+    description: >
+      Wie mart_kpi_overall, aber je Gerätezustand (eine Zeile pro `zustand`).
+      Macht die in empfehlungen.md beschriebenen Unterschiede (z.B. hohe
+      Stornoquote bei "Neu", niedrige Konversion bei "Beschädigt oder
+      defekt") als Dashboard-Chart nachvollziehbar, statt nur per Ad-hoc-SQL.
+    columns:
+      - name: zustand
+        description: "Optischer/technischer Zustand des Altgeräts"
+        data_tests:
+          - not_null
+          - unique
+      - name: auftraege_gesamt
+        description: "Aufträge in diesem Zustand"
+        data_tests:
+          - not_null
+      - name: auftraege_abgeschlossen
+        description: "Davon abgeschlossen (LP_S10/LP_S11)"
+      - name: auftraege_storniert
+        description: "Davon storniert (LP_S9)"
+      - name: auftraege_rueckgabe
+        description: "Davon an Kunden zurückgeschickt (LP_S14/LP_S15/LP_S16/LP_S47)"
+      - name: konversionsrate
+        description: "auftraege_abgeschlossen / auftraege_gesamt, als Verhältnis 0-1"
+      - name: stornoquote
+        description: "auftraege_storniert / auftraege_gesamt, als Verhältnis 0-1"
+      - name: rueckgabequote
+        description: "auftraege_rueckgabe / auftraege_gesamt, als Verhältnis 0-1"
+      - name: avg_angebotswert_euro
+        description: "Ø angebotener Ankaufswert je Zustand in Euro"
+      - name: avg_tatsaechlicher_ankaufswert_euro
+        description: "Ø tatsächlich ausgezahlter Ankaufswert je Zustand in Euro"
+
+  - name: mart_kpi_nach_lead_status
+    description: >
+      Wie mart_kpi_overall, aber aufgeteilt danach, ob ein Auftrag eine
+      Lead-ID hat oder nicht (zwei Zeilen: true/false). Belegt die zentrale
+      Beobachtung aus empfehlungen.md #1 (Konversionsrate mit Lead-ID
+      ~6 %, ohne Lead-ID ~0 %) als eigenständigen Chart.
+    columns:
+      - name: auftraege_gesamt
+        description: "Aufträge in dieser Gruppe"
+        data_tests:
+          - not_null
+      - name: auftraege_abgeschlossen
+        description: "Davon abgeschlossen (LP_S10/LP_S11)"
+      - name: auftraege_storniert
+        description: "Davon storniert (LP_S9)"
+      - name: konversionsrate
+        description: "auftraege_abgeschlossen / auftraege_gesamt, als Verhältnis 0-1"
+      - name: stornoquote
+        description: "auftraege_storniert / auftraege_gesamt, als Verhältnis 0-1"

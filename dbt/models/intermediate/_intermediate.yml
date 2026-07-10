@@ -1,0 +1,25 @@
+version: 2
+
+models:
+  - name: int_trade_in_orders_with_status
+    description: >
+      Trade-In-Bestellungen angereichert um die Klartext-Statusbeschreibung
+      (Join auf stg_status_mapping) und um Ankaufswerte in Euro (Rohwerte
+      liegen in Cent vor). Ein Datenqualitätsproblem wurde hier korrigiert:
+      der Status-Code 'LP_S92' kommt in den Bestelldaten vor, fehlt aber im
+      status_mapping-Seed. Ohne Fallback würde der Left Join hier still NULL
+      produzieren; stattdessen wird ein sprechender Platzhalter gesetzt.
+    columns:
+      - name: id
+        description: "Primärschlüssel der Bestellung"
+        data_tests:
+          - not_null
+          - unique
+      - name: beschreibung
+        description: "Klartext-Statusbeschreibung, inkl. Fallback für unbekannte Status-Codes"
+        data_tests:
+          - not_null
+      - name: lead_id
+        description: "Lead-ID eines potentiellen Kunden."
+        data_tests:
+          - not_null

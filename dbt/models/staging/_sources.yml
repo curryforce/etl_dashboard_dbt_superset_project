@@ -1,0 +1,8 @@
+version: 2
+
+sources:
+ - name: raw
+   schema: raw 
+   tables:
+    - name: trade_in_orders
+      description: "CSV-Daten der Trade-In Orders"

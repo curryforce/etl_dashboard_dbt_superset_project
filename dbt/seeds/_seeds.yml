@@ -1,0 +1,9 @@
+version: 2
+
+seeds:
+  - name: status_mapping
+    description: "Beschreibungsstatus und Beschreibung für Trade-In Optionen beim Handykauf"
+    config:
+      column_types:
+        bearbeitungsstatus: varchar(50)
+        beschreibung: varchar(200)
