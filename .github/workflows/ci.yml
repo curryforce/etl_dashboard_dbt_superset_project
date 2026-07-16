@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+  dbt-build-test:
+    name: Load CSVs + dbt run/test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env: 
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432        
+      POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+      POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+      DBT_PROFILES_DIR: ${{ github.workspace }}/dbt
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: |
+            loader/requirements.txt
+
+      - name: Install loader dependencies
+        run: pip install -r loader/requirements.txt
+
+      - name: Load raw CSVs to postgres
+        working-directory: loader
+        env:
+          DATABASE_URL: postgresql+psycopg2://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/${{ secrets.POSTGRES_DB }}
+          RAW_SCHEMA: raw
+          DATA_DIR: ${{ github.workspace }}/data/raw
+        run: python load_csvs.py
+
+      - name: Install dbt
+        run: pip install "dbt-core==1.8.7" "dbt-postgres==1.8.2"
+
+      - name: dbt debug
+        working-directory: dbt
+        run: dbt debug
+
+      - name: dbt seed
+        working-directory: dbt
+        run: dbt seed
+
+      - name: dbt run
+        working-directory: dbt
+        run: dbt run
+
+      - name: dbt test
+        working-directory: dbt
+        run: dbt test
+
+  docker-build:
+    name: Build Docker images
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [loader, dbt, superset]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build ${{ matrix.service }} image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./${{ matrix.service }}
+          push: false
+          cache-from: type=gha, scope=${{ matrix.service }}
+          cache-to: type=gha, mode=max, scope=${{ matrix.service }}
