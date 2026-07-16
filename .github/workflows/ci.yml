@@ -9,7 +9,7 @@ on:
 jobs:
   dbt-build-test:
     name: Load CSVs + dbt run/test
-    runs-om: ubuntu-latest
+    runs-on: ubuntu-latest
 
     services:
       postgres:
