@@ -32,7 +32,7 @@ jobs:
       POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
       POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
       POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-      DBT_PROFILE_DIR: ${{ github.workspace }}/dbt
+      DBT_PROFILES_DIR: ${{ github.workspace }}/dbt
 
     steps:
       - name: Checkout
@@ -94,5 +94,5 @@ jobs:
         with:
           context: ./${{ matrix.service }}
           push: false
-          cache-form: type=gha scope=${{ matrix.service }}
+          cache-from: type=gha, scope=${{ matrix.service }}
           cache-to: type=gha, mode=max, scope=${{ matrix.service }}
